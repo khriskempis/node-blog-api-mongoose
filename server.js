@@ -25,7 +25,14 @@ app.get('/posts', (req, res) => {
 	});
 });
 
-
+app.get('/posts/:id', (req, res) => {
+	BlogPost
+	.findById(req.params.id)
+	.then(restaurant => res.json(restaurant.serialize()))
+	.catch(err => {
+		res.status(500).json({message: "Internal Server Error"})
+	});
+});
 
 
 app.post("/posts", (req, res) => {
@@ -49,6 +56,34 @@ app.post("/posts", (req, res) => {
 			console.error(err);
 			res.status(500).json({message: "Internal server error"});
 		});
+});
+
+app.put("/posts/:id", (req, res) => {
+	if (!(res.params.id && req.body.id === req.body.id)) {
+		const message = `Request path id (${req.params.id}) and request body id (${req.body.id}) must match.`
+		console.error(message);
+		return res.status(400).json({message: message});
+	}
+
+	const toUpdate = {};
+	const updateableFields = ["title", "content", "author"];
+
+	updateableFields.forEach(field => {
+		if (field in req.body) {
+			toUpdate[field] = req.body[field];
+		}
+	});
+
+	BlogPost
+		.findbyIdAndUpdate(req.params.id, {$set: toUpdate })
+		.then(posts => res.status(204).end())
+		.catch(err => res.status(500).json({message: "Internal Server Error"}));
+});
+
+app.delete("/posts/:id", (req, res) => {
+	BlogPost.findByIdAndRemove(req.params.id)
+		.then(posts => res.status(204).end())
+		.catch(err => res.status(500).json({message: "Internal Server Error"}));
 });
 
 
